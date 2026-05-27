@@ -1,275 +1,306 @@
-import os
-
-html_content = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>High School GPA & Credit Simulator</title>
+    <title>High School GPA & Graduation Analyzer</title>
     <style>
         :root {
-            --primary: #2c3e50;
-            --secondary: #34495e;
-            --accent: #3498db;
-            --success: #27ae60;
-            --warning: #f39c12;
-            --danger: #e74c3c;
-            --light: #ecf0f1;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --background: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --border: #cbd5e1;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
-            color: var(--primary);
-            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.5;
             padding: 20px;
-            line-height: 1.6;
+            margin: 0;
         }
 
         .container {
             max-width: 1000px;
             margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
 
-        h1 {
+        header {
             text-align: center;
-            color: var(--primary);
-            border-bottom: 3px solid var(--accent);
-            padding-bottom: 10px;
-        }
-
-        .summary-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
             margin-bottom: 30px;
         }
 
-        .card {
-            background: var(--light);
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            border-top: 5px solid var(--accent);
+        h1 {
+            color: var(--primary);
+            margin-bottom: 5px;
         }
 
-        .card h3 { margin: 0; font-size: 0.9em; text-transform: uppercase; color: #7f8c8d; }
-        .card p { margin: 10px 0 0; font-size: 1.8em; font-weight: bold; }
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+            position: sticky;
+            top: 10px;
+            z-index: 100;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .card h3 {
+            margin: 0 0 10px 0;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+        }
+
+        .card .value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-top: 5px;
+        }
+
+        .pass { background-color: #dcfce7; color: var(--success); }
+        .fail { background-color: #fee2e2; color: var(--danger); }
 
         .year-section {
-            margin-bottom: 40px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .year-header {
-            background: var(--secondary);
-            color: white;
-            padding: 10px 20px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .semester-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
+            background: var(--card-bg);
+            border-radius: 12px;
             padding: 20px;
-            background: #fff;
+            margin-bottom: 25px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+        }
+
+        .year-title {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-top: 0;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+
+        .semesters-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .semesters-container {
+                grid-template-columns: 1fr;
+            }
         }
 
         .semester-box {
-            flex: 1;
-            min-width: 300px;
-            border: 1px solid #eee;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
             padding: 15px;
-            border-radius: 6px;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
+        .semester-box h4 {
+            margin-top: 0;
+            color: #475569;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 5px;
         }
 
-        th { text-align: left; font-size: 0.8em; color: #7f8c8d; padding: 5px; }
-        td { padding: 5px; }
+        .class-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 10px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .class-row label {
+            font-size: 0.9rem;
+            color: #475569;
+        }
 
         select {
             width: 100%;
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
+            padding: 6px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background-color: white;
+            font-size: 0.9rem;
         }
 
-        .status-on-track { color: var(--success); }
-        .status-off-track { color: var(--danger); }
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
 
-        .footer-note {
-            font-size: 0.85em;
-            color: #7f8c8d;
-            margin-top: 30px;
+        .instructions {
+            background: #eff6ff;
+            border-left: 4px solid var(--primary);
             padding: 15px;
-            background: #fdf6e3;
-            border-left: 5px solid var(--warning);
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 25px;
+        }
+
+        .instructions ul {
+            margin: 5px 0 0 0;
+            padding-left: 20px;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>4-Year High School GPA Simulator</h1>
+    <header>
+        <h1>High School GPA & Graduation Analyzer</h1>
+        <p>Track your progress toward your 230-credit graduation requirement.</p>
+    </header>
 
-    <div class="summary-cards">
+    <div class="instructions">
+        <strong>Graduation Requirements:</strong>
+        <ul>
+            <li>Minimum cumulative GPA: <strong>2.00</strong></li>
+            <li>Minimum total credits: <strong>230</strong> (5 credits per class, grades A-D)</li>
+            <li>Select "None" or leave blank for classes you haven't taken yet.</li>
+        </ul>
+    </div>
+
+    <div class="dashboard">
         <div class="card">
             <h3>Cumulative GPA</h3>
-            <p id="total-gpa">0.00</p>
+            <div class="value" id="cumulative-gpa">0.00</div>
         </div>
         <div class="card">
-            <h3>Total Credits</h3>
-            <p id="total-credits">0 / 230</p>
+            <h3>Credits Earned</h3>
+            <div class="value" id="total-credits">0 / 230</div>
         </div>
         <div class="card">
             <h3>Graduation Status</h3>
-            <p id="grad-status" style="font-size: 1.2em;">Not Eligible</p>
+            <div id="grad-status" class="status-badge fail">Not Meeting Requirements</div>
         </div>
     </div>
 
-    <div id="years-holder"></div>
-
-    <div class="footer-note">
-        <strong>Requirements:</strong> Minimum 230 Credits and 2.0 GPA to graduate. 
-        Each class is worth 5 credits (D or higher). A=4, B=3, C=2, D=1, F=0.
-    </div>
+    <form id="gpa-form">
+        <div id="years-wrapper"></div>
+    </form>
 </div>
 
 <script>
     const years = [
-        { id: 9, name: "Freshman (9th Grade)" },
-        { id: 10, name: "Sophomore (10th Grade)" },
-        { id: 11, name: "Junior (11th Grade)" },
-        { id: 12, name: "Senior (12th Grade)" }
+        { id: "9th", name: "Freshman Year (9th Grade)" },
+        { id: "10th", name: "Sophomore Year (10th Grade)" },
+        { id: "11th", name: "Junior Year (11th Grade)" },
+        { id: "12th", name: "Senior Year (12th Grade)" }
     ];
+    
+    const semesters = ["Fall", "Spring"];
+    const classesCount = 7;
 
-    const gradePoints = { "A": 4, "B": 3, "C": 2, "D": 1, "F": 0, "": 0 };
+    // Generate HTML for all 4 years, 2 semesters, 7 classes each dynamically
+    const wrapper = document.getElementById('years-wrapper');
+    
+    years.forEach(year => {
+        let yearHtml = `
+            <div class="year-section">
+                <div class="year-title">${year.name}</div>
+                <div class="semesters-container">
+        `;
 
-    function createSimulator() {
-        const holder = document.getElementById('years-holder');
-        
-        years.forEach(year => {
-            const yearDiv = document.createElement('div');
-            yearDiv.className = 'year-section';
+        semesters.forEach(sem => {
+            yearHtml += `
+                <div class="semester-box">
+                    <h4>${sem} Semester</h4>
+            `;
             
-            let semestersHtml = '';
-            ['Fall', 'Spring'].forEach(sem => {
-                let rows = '';
-                for(let i=1; i<=7; i++) {
-                    rows += `
-                        <tr>
-                            <td>Class ${i}</td>
-                            <td>
-                                <select class="grade-input" data-year="${year.id}" data-sem="${sem}" onchange="calculate()">
-                                    <option value="">-</option>
-                                    <option value="A">A</option>
-                                    <option value="B">B</option>
-                                    <option value="C">C</option>
-                                    <option value="D">D</option>
-                                    <option value="F">F</option>
-                                </select>
-                            </td>
-                        </tr>
-                    `;
-                }
-                
-                semestersHtml += `
-                    <div class="semester-box">
-                        <h3>${sem} Semester</h3>
-                        <table>
-                            <thead><tr><th>Course</th><th>Grade</th></tr></thead>
-                            <tbody>${rows}</tbody>
-                        </table>
+            for(let i = 1; i <= classesCount; i++) {
+                yearHtml += `
+                    <div class="class-row">
+                        <label>Class ${i}</label>
+                        <select class="grade-select" data-year="${year.id}" data-sem="${sem}">
+                            <option value="">None</option>
+                            <option value="4">A</option>
+                            <option value="3">B</option>
+                            <option value="2">C</option>
+                            <option value="1">D</option>
+                            <option value="0">F</option>
+                        </select>
                     </div>
                 `;
-            });
-
-            yearDiv.innerHTML = `
-                <div class="year-header">
-                    <strong>${year.name}</strong>
-                    <span id="year-stats-${year.id}">0.00 GPA | 0 Credits</span>
-                </div>
-                <div class="semester-container">
-                    ${semestersHtml}
-                </div>
-            `;
-            holder.appendChild(yearDiv);
-        });
-    }
-
-    function calculate() {
-        const inputs = document.querySelectorAll('.grade-input');
-        let totalPoints = 0;
-        let totalClassesWithGrades = 0;
-        let totalCredits = 0;
-        
-        // Tracking per year for headers
-        let yearStats = { 9: {pts:0, count:0, cred:0}, 10: {pts:0, count:0, cred:0}, 11: {pts:0, count:0, cred:0}, 12: {pts:0, count:0, cred:0} };
-
-        inputs.forEach(input => {
-            const grade = input.value;
-            const yId = input.dataset.year;
+            }
             
-            if (grade !== "") {
-                const pts = gradePoints[grade];
-                totalPoints += pts;
-                totalClassesWithGrades++;
-                
-                yearStats[yId].pts += pts;
-                yearStats[yId].count++;
+            yearHtml += `</div>`; // Close semester-box
+        });
 
-                if (grade !== "F") {
-                    totalCredits += 5;
-                    yearStats[yId].cred += 5;
+        yearHtml += `
+                </div>
+            </div>
+        `;
+        wrapper.insertAdjacentHTML('beforeend', yearHtml);
+    });
+
+    // Calculation Logic
+    function calculateGPA() {
+        const selects = document.querySelectorAll('.grade-select');
+        let totalPoints = 0;
+        let gradedClassesCount = 0;
+        let earnedCredits = 0;
+
+        selects.forEach(select => {
+            const val = select.value;
+            if (val !== "") {
+                const points = parseInt(val);
+                totalPoints += points;
+                gradedClassesCount++;
+
+                // Credits are only earned for grades A, B, C, D (points > 0)
+                if (points > 0) {
+                    earnedCredits += 5;
                 }
             }
         });
 
-        // Update Cumulative
-        const finalGpa = totalClassesWithGrades > 0 ? (totalPoints / totalClassesWithGrades).toFixed(2) : "0.00";
-        document.getElementById('total-gpa').innerText = finalGpa;
-        document.getElementById('total-credits').innerText = `${totalCredits} / 230`;
+        // Calculate GPA
+        const gpa = gradedClassesCount > 0 ? (totalPoints / gradedClassesCount).toFixed(2) : "0.00";
+        
+        // Update DOM
+        document.getElementById('cumulative-gpa').innerText = gpa;
+        document.getElementById('total-credits').innerText = `${earnedCredits} / 230`;
 
-        // Update Year Headers
-        years.forEach(y => {
-            const yGpa = yearStats[y.id].count > 0 ? (yearStats[y.id].pts / yearStats[y.id].count).toFixed(2) : "0.00";
-            document.getElementById(`year-stats-${y.id}`).innerText = `${yGpa} GPA | ${yearStats[y.id].cred} Credits`;
-        });
-
-        // Graduation Logic
-        const statusEl = document.getElementById('grad-status');
-        if (totalCredits >= 230 && parseFloat(finalGpa) >= 2.0) {
-            statusEl.innerText = "GRADUATED";
-            statusEl.className = "status-on-track";
-            statusEl.style.color = "#27ae60";
+        // Update Graduation Status
+        const statusBadge = document.getElementById('grad-status');
+        if (parseFloat(gpa) >= 2.00 && earnedCredits >= 230) {
+            statusBadge.innerText = "On Track to Graduate!";
+            statusBadge.className = "status-badge pass";
         } else {
-            statusEl.innerText = "IN PROGRESS";
-            statusEl.style.color = "#f39c12";
+            statusBadge.innerText = "Not Meeting Requirements";
+            statusBadge.className = "status-badge fail";
         }
     }
 
-    createSimulator();
+    // Attach event listener to detect any dropdown changes instantly
+    document.getElementById('gpa-form').addEventListener('change', calculateGPA);
 </script>
 
 </body>
 </html>
-"""
-
-with open("high_school_gpa_simulator.html", "w") as f:
-    f.write(html_content)
